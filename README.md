@@ -27,7 +27,7 @@ __Este proyecto estará basado simplemente en Spring Framework.__
 ## Spring Application Context
 
 It represents the Spring Dependency Injection Container. Beans are managed inside it. Context are based in one or more than one configuration class.
-There are to ways to configure the application context. One is __using external config files__ and another one is __using anottations__.
+There are two ways to configure the application context. One is __using external config files__ and another one is __using anottations__.
 
 ## External Config Files to configure Application context.
 
@@ -107,6 +107,44 @@ public class RewardsConfig {
 	}
 
 }
+```
+## Anotations for configuring App Context.
+
+The config file will be empty and you will use the following anotation to scann all the components/beans on the corresponding configured classes.
+Components can be:
+
+- @Component
+- @Service
+- @Repository
+- @Controller
+
+```java {"id":"01HYFQZSJA955AWS4SNEV1ESPB"}
+// It will scann all the cllasses configured as components in the package rewards.internal
+@ComponentScan("rewards.internal")
+@Configuration
+public class RewardsConfig {	
+}
+
+```
+
+This will be an example of a class configured as component/bean. We use @Repository to identfy it as a component and @Autowired to
+resolve the dependency inyection. In this case Datasource will be taken from another config file which defines it.
+
+```java {"id":"01HYFQZSJBD01N5FD05BXCHTD7"}
+@Repository
+public class JdbcRewardRepository implements RewardRepository {
+
+	private DataSource dataSource;
+
+	/**
+	 * Sets the data source this repository will use to insert rewards.
+	 * @param dataSource the data source
+	 */
+	@Autowired
+	public void setDataSource(DataSource dataSource) {
+		this.dataSource = dataSource;
+	}
+
 ```
 
 #### Beans Scopes
@@ -199,45 +237,6 @@ SpringApplication.run(AppConfig.class);
 ```
 
 - Integration Test only: @ActiveProfiles
-
-## Anotations for configuring App Context.
-
-The config file will be empty and you will use the following anotation to scann all the components/beans on the corresponding configured classes.
-Components can be:
-
-- @Component
-- @Service
-- @Repository
-- @Controller
-
-```java {"id":"01HYFQZSJA955AWS4SNEV1ESPB"}
-// It will scann all the cllasses configured as components in the package rewards.internal
-@ComponentScan("rewards.internal")
-@Configuration
-public class RewardsConfig {	
-}
-
-```
-
-This will be an example of a class configured as component/bean. We use @Repository to identfy it as a component and @Autowired to
-resolve the dependency inyection. In this case Datasource will be taken from another config file which defines it.
-
-```java {"id":"01HYFQZSJBD01N5FD05BXCHTD7"}
-@Repository
-public class JdbcRewardRepository implements RewardRepository {
-
-	private DataSource dataSource;
-
-	/**
-	 * Sets the data source this repository will use to insert rewards.
-	 * @param dataSource the data source
-	 */
-	@Autowired
-	public void setDataSource(DataSource dataSource) {
-		this.dataSource = dataSource;
-	}
-
-```
 
 #### @PostConstruct and @PreDestroy
 
