@@ -147,13 +147,23 @@ public class JdbcRewardRepository implements RewardRepository {
 
 ```
 
-#### Beans Scopes
+## Container Lifecycle
 
-- Singleton(default) One instance for every object.
-- Prototype: New instance created everytime a bean is refered.
-- Session: In web apps you have one instance per user session.
-- Request: In web apps you have one instance per request. LifeCycle is very short
+The difference between annotation config and external config is:
 
+| Type of Config | Bean Detection | BeanFactoryPP | Bean instantiation and DI | Bean PP |
+|-----------|-----------|-----------|-----------|-----------|
+| Java config| Read @Bean| ' | Call @Bean method impl| ' |
+| Annotation config | @Component Scanning| ' | 1. Instantiation & @Autowired on Constructor. <br> 2. Injection of@Autowired methods and fields| ' |
+
+### Initialization
+
+There are two main steps and each of those have also there own steps:
+
+1. Load and Process Bean Definitions
+
+- Load Bean Definitions ti the BeanFactory. Just the names ofthe Beans.
+- Post Process Bean Definitions using the BeanFactoryPostProcessor. An example is PropertySourcesPlaceholderConfigurer (it implemnts BeanFactoryPostProcessor) responsable for inserting external properties:
 #### External properties to control Configuration
 
 Property Source
@@ -202,6 +212,58 @@ ds.setPassword( pwd )):
 return ds;
 }
 ```
+We can also implement our own BeanFactoryPostProcessor. It has to be declared as a Bean.
+
+``` java
+@Bean
+public static BeanFactoryPostProcessor myConfigurer() {
+return new MyConfigurationCustomizer();
+}
+```
+
+``` java
+public class MyConfigurationCustomizer implements BeanFactoryPostProcessor {
+// Perform customization of the configuration such as the placeholder syntax
+}
+```
+
+2. Create and initialize Beans
+
+- Find/Create its dependencies.
+- Instantiate Beans (Dependency Injection)
+- Perform Setter Injection (Dependency Injection)
+- BeanPostProcessor (Before Init->Initiallizers call->After Init)
+
+    Un ejemplo de esto es `@PostConstruct`: se utiliza para definir el/los método/s que queremos ejecutar después de construir el componente o bean. Puedes crear tu propio BeanPostProcessor implementándolo.
+
+    ```java
+    public interface BeanPostProcessor {
+        public Object postProcessBeforeInitialization(Object bean, String beanName); 
+        public Object postProcessAfterInitialization(Object bean, String beanName);
+    }
+    ```
+
+    A veces, en lugar de devolver el bean, el BeanPostProcessor devuelve un proxy. Ese proxy puede ser: JDK Proxy y CGLib Proxy (Spring Boot). El primero se utiliza si tu clase implementa una interfaz y el segundo si no.
+
+
+- Bean ready to use.
+
+### Usage
+
+Beans are available for use.
+
+### Destruction
+
+Before this phase is when you can run __@PreDestroy__:  is used to define the method/s that we want to execute before destroying the component or bean.
+Beans are release for Garbage Collector
+
+
+#### Beans Scopes
+
+- Singleton(default) One instance for every object.
+- Prototype: New instance created everytime a bean is refered.
+- Session: In web apps you have one instance per user session.
+- Request: In web apps you have one instance per request. LifeCycle is very short
 
 #### Spring Profiles
 
@@ -238,46 +300,3 @@ SpringApplication.run(AppConfig.class);
 
 - Integration Test only: @ActiveProfiles
 
-#### @PostConstruct and @PreDestroy
-
-@PostConstruct: is used to define the method/s that we want to execute after contructing the component or bean.
-@PreDestroy:  is used to define the method/s that we want to execute before destroying the component or bean.
-
-## Container Lifecycle
-
-### Initialization
-
-There are two main steps and each of those have also there own steps:
-
-1. Load and Process Bean Definitions
-
-- Load Bean Definitions ti the BeanFactory. Just the names ofthe Beans.
-- Post Process Bean Definitions using the BeanFactoryPostProcessor. An example is PropertySourcesPlaceholderConfigurer
-
-2. Create and initialize Beans
-
-- Find/Create its dependencies.
-- Instantiate Beans (Dependency Injection)
-- Perform Setter Injection (Dependency Injection)
-- BeanPostProcessor
-Sometimes the BeanPostProcesor instead of returning the bean it returns a proxy. That proxy can be: JDK Proxy and CGLib Proxy (Springboot). First is used if your class implemnt an interface and the second if not.
-  - Before Init
-  - Initializers Call
-  - After Init
-
-```java {"id":"01HYFQZSJBD01N5FD05D4MMN5M"}
-		public interface BeanPostProcessor {
-			public Object postProcessBeforeInitialization(Object bear, String beanName); 
-			public Object postProcessAfterInitialization(Object bean, String beanName);
-		}
-```
-
-- Bean ready to use.
-
-### Usage
-
-Beans are available for use.
-
-### Destruction
-
-Beans are release for Garbage Collector

@@ -1,9 +1,0 @@
-@Bean
-public static BeanFactoryPostProcessor myConfigurer() {
-return new MyConfigurationCustomizer();
-}
-public class MyConfigurationCustomizer implements BeanFactoryPostProcessor {
-// Perform customization of the configuration such as the placeholder syntax
-}
-
-
