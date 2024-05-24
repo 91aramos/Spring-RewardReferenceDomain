@@ -251,8 +251,8 @@ There are two main steps and each of those have also there own steps:
 
 1. Load and Process Bean Definitions
 
-- Load Bean Definitions
-- Post Process Bean Definitions.
+- Load Bean Definitions ti the BeanFactory. Just the names ofthe Beans.
+- Post Process Bean Definitions using the BeanFactoryPostProcessor. An example is PropertySourcesPlaceholderConfigurer
 
 2. Create and initialize Beans
 
