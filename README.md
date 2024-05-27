@@ -2,7 +2,7 @@
 
 Every time a user dines at a restaurant participating in the network, a contribution is made to his account.
 
-#### Spring Framework:
+## Spring Framework:
 
 Spring Framework es un marco de trabajo integral para el desarrollo de aplicaciones empresariales en Java. Proporciona una amplia gama de funcionalidades y módulos para abordar diferentes aspectos del desarrollo de aplicaciones, como:
 
@@ -14,7 +14,7 @@ Spring Framework es un marco de trabajo integral para el desarrollo de aplicacio
 
 Spring Framework se centra en la modularidad y la flexibilidad, permitiendo a los desarrolladores elegir los componentes que necesitan para sus aplicaciones.
 
-#### Spring Boot:
+## Spring Boot:
 
 Spring Boot es una extensión del Spring Framework que simplifica significativamente el proceso de configuración y desarrollo de aplicaciones Spring. Proporciona un enfoque "opinado" o preconfigurado para el desarrollo de aplicaciones, lo que significa que viene con una serie de configuraciones predeterminadas y dependencias incorporadas que permiten iniciar rápidamente un proyecto sin necesidad de realizar configuraciones manuales extensas.
 
@@ -29,7 +29,7 @@ __Este proyecto estará basado simplemente en Spring Framework.__
 It represents the Spring Dependency Injection Container. Beans are managed inside it. Context are based in one or more than one configuration class.
 There are two ways to configure the application context. One is __using external config files__ and another one is __using anottations__.
 
-## External Config Files to configure Application context.
+### External Config Files to configure Application context.
 
 Usually configuration files are splitted:
 
@@ -108,7 +108,7 @@ public class RewardsConfig {
 
 }
 ```
-## Anotations for configuring App Context.
+### Anotations for configuring App Context.
 
 The config file will be empty and you will use the following anotation to scann all the components/beans on the corresponding configured classes.
 Components can be:
@@ -258,14 +258,14 @@ Before this phase is when you can run __@PreDestroy__:  is used to define the me
 Beans are release for Garbage Collector
 
 
-#### Beans Scopes
+### Beans Scopes
 
 - Singleton(default) One instance for every object.
 - Prototype: New instance created everytime a bean is refered.
 - Session: In web apps you have one instance per user session.
 - Request: In web apps you have one instance per request. LifeCycle is very short
 
-#### Spring Profiles
+### Spring Profiles
 
 Contains a group of Beans and usually represents each environment. Ptofiles can be defined at class level or bean/method level.
 
@@ -299,4 +299,107 @@ SpringApplication.run(AppConfig.class);
 ```
 
 - Integration Test only: @ActiveProfiles
+
+## Spring Aspect Oriented Programing (AOP)
+
+Enable modularization of cross-cutting concerns. For example: Logs, security config etc. It is use to manage something common for all the app in a single point.
+The leading AOP Technologies are:
+- AspectJ
+- Spring AOP
+
+The core AOP Concepts are:
+- Joint Point: method call or exception thrown.
+- Pointcut: Expresion that selectes one or more Join Point
+- Advice: Code to be executed at each selected Join Point.
+	- Before
+	```java
+	//
+	@Before(“execution(void set*(*))”)
+	```
+	- AfterReturning
+	```java
+	//	Audit all operations in the service package that return a Reward object
+	@AfterReturning(value=“execution(* service..*.*(..))”,returning=“reward”)
+	```
+	- AfterThrowing
+	```java
+	//Send an email every time a Repository class throws an exception of type DataAccessException
+	@AfterThrowing(value=“execution(* *..Repository.*(..))”, throwing=‘“e”)
+	```
+	- After
+	```java
+	// Track calls to all update methods
+	@After(*execution(void update*(..))”)
+	```
+	- Arround
+	```java
+	// Cache values returned by cacheable services
+	@Around(“execution(@example.Cacheable * rewards.service..”.*(..))")
+	```
+- Aspect: A module that encapsulates pointcuts and advice.
+- Weaving: Technique to combine aspects and main code.
+- AOP Proxy: An "enhanced" class that stands in place of your original.
+
+An example could be to implement a log message before a setter method.
+
+```java
+public interface Cache {
+	public void setCacheSize(int size);
+	public void setTimeout(int ms);
+}
+
+public class SimpleCache Implements Cache { 
+	private int cacheSize, ms; 
+	private String name;
+	public SimpleCache(String beanName) { name = beanName; }
+	public void setCacheSize(int size) { cacheSize = size; }
+	public void setTimeout(int ms) { ms = ms; }
+	...
+	public String toString() { return name; } //For convenience later
+}
+```
+
+```java
+@Aspect
+@Component
+public class PropertyChangeTracker {
+	private Logger logger = Logger.getLogger(getClass());
+
+	/*[Modifiers] ReturnType [ClassType] MethodName (Arguments) [throws ExceptionType]
+	* matches one and only one
+	.. matches zero or more arguments or packages
+	*/
+	@Before(“execution(void set*(*)/*Join Point*/)”)//Pointcut
+	//Advice
+	public void trackChange(JoinPoint point) {
+		String methodName = point.getSignature().getName();
+		Object newValue = point.getArgs()[0]; |
+		logger.info(methodName + " about to change to " +
+		newValue + "on" +
+		point.getTarget());
+	}
+}
+```
+```java
+@Configuration
+@Aspect
+@Import(AspectConfig.class)
+public class MainConfig {
+@Bean
+public Cache cacheA() { return new SimpleCache(“cacheA”); }
+@Bean
+public Cache cacheB() { return new SimpleCache(“cacheB”); }
+@Bean
+public Cache cacheC() { return new SimpleCache(“cacheC”); }
+}
+```
+
+```java
+ApplicationContext context = SpringApplication.run(MainConfig.class);
+@Autowired
+@Qualifier("cacheA");
+private Cache cache;
+cache.setCacheSize(2500);
+
+```
 
