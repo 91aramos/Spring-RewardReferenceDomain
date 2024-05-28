@@ -369,7 +369,7 @@ public class PropertyChangeTracker {
 	* matches one and only one
 	.. matches zero or more arguments or packages
 	*/
-	@Before(“execution(void set*(*)/*Join Point*/)”)//Pointcut
+	@Before("execution(void set*(*)/*Join Point*/)")//Pointcut
 	//Advice
 	public void trackChange(JoinPoint point) {
 		String methodName = point.getSignature().getName();
