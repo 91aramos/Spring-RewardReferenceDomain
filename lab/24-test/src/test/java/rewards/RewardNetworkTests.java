@@ -5,8 +5,11 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -17,12 +20,12 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 
 /*
- * TODO-00: In this lab, you are going to exercise the following:
+ * DONE: In this lab, you are going to exercise the following:
  * - Using annotation(s) from Spring TestContext Framework for
  *   creating application context for the test
  * - Using profiles in the test
  *
- * TODO-01: Use Spring TestContext Framework
+ * DONE: Use Spring TestContext Framework
  * - Read through Spring document on Spring TestContext Framework
  *   (https://docs.spring.io/spring-framework/docs/current/spring-framework-reference/testing.html#testcontext-framework)
  * - Add annotation(s) to this class so that it can
@@ -34,14 +37,14 @@ import static org.junit.jupiter.api.Assertions.*;
  * - Re-run the current test, it should pass.
  */
 
-/* TODO-02: Annotate all 'Stub*Repository' classes with @Repository
+/* DONE: Annotate all 'Stub*Repository' classes with @Repository
  * - In the package rewards/internal, annotate all 'Stub*Repository' classes
  *   with the @Repository annotation (WITHOUT specifying any profile yet).
  *   (Make sure you are changing code in the '24-test' project.)
  * - Rerun the current test, it should fail.  Why?
  */
 
-/* TODO-03: Assign the 'jdbc' profile to all Jdbc*Repository classes
+/* DONE: Assign the 'jdbc' profile to all Jdbc*Repository classes
  * - Using the @Profile annotation, assign the 'jdbc' profile to all Jdbc*Repository classes
  *   (such as JdbcAccountRepository).  (Be sure to annotate the actual repository classes in
  *   src/main/java, not the test classes in src/main/test!)
@@ -52,16 +55,16 @@ import static org.junit.jupiter.api.Assertions.*;
  * - Examine the logs, they should indicate "stub" repositories were used.
  */
 
-/* TODO-04: Change active-profile to "jdbc".
+/* DONE: Change active-profile to "jdbc".
  * - Rerun the test, it should pass.
  * - Check which repository implementations are being used now.
  */
 
-/* TODO-05: Assign beans to the "local" profile
+/* DONE: Assign beans to the "local" profile
  * - Go to corresponding step in TestInfrastructureLocalConfig class.
  */
 
-/* TODO-06: Use "jdbc" and "local" as active profiles
+/* DONE: Use "jdbc" and "local" as active profiles
  * - Now that the bean 'dataSource' is specific to the local profile, should we expect
  * 	 this test to be successful?
  * - Make the appropriate changes so the current test uses 2 profiles ('jdbc' and 'local').
@@ -83,33 +86,13 @@ import static org.junit.jupiter.api.Assertions.*;
  * - Run the test again.
  */
 
+@SpringJUnitConfig(classes=TestInfrastructureConfig.class)
+@ActiveProfiles({"jdbc", "local"})
 public class RewardNetworkTests {
 
 	
-	/**
-	 * The object being tested.
-	 */
+	@Autowired
 	private RewardNetwork rewardNetwork;
-
-	/**
-	 * Need this to enable clean shutdown at the end of the application
-	 */
-	private ConfigurableApplicationContext context;
-
-	@BeforeEach
-	public void setUp() {
-		// Create the test configuration for the application from one file
-		context = SpringApplication.run(TestInfrastructureConfig.class);
-		// Get the bean to use to invoke the application
-		rewardNetwork = context.getBean(RewardNetwork.class);
-	}
-
-	@AfterEach
-	public void tearDown() throws Exception {
-		// simulate the Spring bean destruction lifecycle:
-		if (context != null)
-			context.close();
-	}
 
 	@Test
 	@DisplayName("Test if reward computation and distribution works")

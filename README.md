@@ -267,7 +267,7 @@ Beans are release for Garbage Collector
 
 ### Spring Profiles
 
-Contains a group of Beans and usually represents each environment. Ptofiles can be defined at class level or bean/method level.
+Contains a group of Beans and usually represents each environment. Profiles can be defined at class level or bean/method level.
 
 ```java {"id":"01HXH47WVTGS3NPAYHK88N5JHG"}
 @Configuration 
@@ -324,7 +324,7 @@ The core AOP Concepts are:
 	- AfterThrowing
 	```java
 	//Send an email every time a Repository class throws an exception of type DataAccessException
-	@AfterThrowing(value=“execution(* *..Repository.*(..))”, throwing=‘“e”)
+	@AfterThrowing(value="execution(* rewards.internal.*.*Repository.*(..))", throwing="e")
 	```
 	- After
 	```java
@@ -403,3 +403,149 @@ cache.setCacheSize(2500);
 
 ```
 
+## Integration Testing
+In unit testing there is no need of spring, the components will be tested in isolation.
+We are going to use JUnit 5 framework. 
+
+In the case of integration testing in specific you need Spring to wire components dependencies.
+
+| Production Mode | Integration test |
+|-----------------|------------------|
+| Application     | ServiceTest      | 
+| ServiceImpl     | ServiceImpl      | 
+| Repo            | Repo             | 
+| Production DB   | Test DB          | 
+
+As of now, we were creating the application context in the test class in the @BeforeEach. This was not really efficient because it crated the application context before each method:
+```java
+    @BeforeEach 
+    void setUp() {
+        ApplicationContext context = SpringApplication.run(TestInfrastructureConfig.class);
+        rewardNetwork= context.getBean(RewardNetwork.class);
+    }
+```
+In Spring exists the TestContext framework which allows you to define an ApplicationContext for testing. If we create the application context this way, the application context won't be created for each test. it will be cached.
+
+__@ContextConfiguration__ is used to define the configuration tu use.
+
+__@ExtendWith__ is an annotation from the JUnit 5 (JUnit Jupiter) testing framework. It is used to register extensions that provide additional functionality to tests, such as lifecycle callbacks, dependency injection, and more.
+
+```java
+@ExtendWith(SpringExtension.class)
+@ContextConfiguration(classes={SystemTestConfig.class})
+public class TransferServiceTests {
+    @Autowired
+    private TransferService transferService;
+
+    @Test
+    public void shouldTransferMoneySuccessfully() {
+        TransferConfirmation conf = transferService.transfer(...);
+		...
+    }
+}
+```
+
+Usually those two annotations go together and instead of using both we can just use: __@SpringJUnitConfig__
+
+```java
+@SpringJUnitConfig(SystemTestConfig.class)
+public class TransferServiceTests {
+	// @Autowired
+	//private TransferService transferService;
+
+	@Test
+	public void shouldTransferMoneySuccessfully(@Autowired TransferService transferService) {
+		TransferConfirmation conf = transferService.transfer(...);
+		...
+	}
+}
+```
+
+As the application context is cached. If you don't want one component change to impact in another test we can use __@DirtiesContext__. This will errase the app context after the execution of the method.
+```java
+	@Test
+	@DirtiesContext
+	public void shouldTransferMoneySuccessfully(@Autowired TransferService transferService) {
+		...
+	}
+```
+Also we can include properties in a test class.
+
+```java
+@SpringJUnitConfig(SystemTestConfig.class)
+@TestPropertySource(properties = { "username=foo", "password=bar" },
+		locations = "classpath:/transfer-test.properties")
+public class TransferServiceTests {
+}
+```
+
+## Testing with Profiles
+
+Before we used to enable or disable beans at runtime by including the profiles in the configuration class. However that wont work in a test environment. To activate profiles in tes environments we can do it by using __@ActiveProfiles__
+
+Only beans matching an active profile or with no profile are loaded.
+
+For Annotation Cofiguration:
+
+```java
+// Component class
+@Repository
+@Profile("jdbc")
+public class
+JdbcAccountRepository {
+}
+```
+
+```java
+//Test Class
+@SpringJUnitConfig(DevConfig.class)
+@ActiveProfiles("jdbc")
+public class TransferServiceTests
+{..}
+```
+
+For Java Configuration:
+```java
+//Configuration Class
+@Configuration
+@Profile("jdbc")
+public class DevConfig {
+@Bean
+public ... {...}
+}
+
+//OR
+@Configuration
+public class DevConfig {
+	@Bean
+	@Profile("jdbc")
+	public ... {...}
+}
+```
+
+```java
+//Test Class
+@SpringJUnitConfig(DevConfig.class)
+@ActiveProfiles("jdbc")
+public class TransferServiceTests
+{..}
+```
+
+## Testing with Databases
+@Sql is an annotation that will let you execute scripts against your datasource.
+
+```java
+@SpringJUnitConfig(...)
+@Sql( { "Itestfiles/schema.sql", "ItestfiIeslload-data.sql"})
+public class MainTests {
+// schema.sql and load-data.sql only run before this test
+@Test 
+public void success(){ ... }
+	
+@Test // Overrides class sqls 
+@Sql ( scripts="/testfiles/setupBadTransfer.sql" ) // Excutes before executing method
+@Sql ( scripts="/testfiIeslcleanup.sql“,
+		executionPhase=Sql.ExecutionPhase.AFTER_TEST_METHOD) // Excutes when defined in executionPhase
+public void transferError() { ... }
+}
+```

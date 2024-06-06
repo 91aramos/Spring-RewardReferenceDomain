@@ -1,7 +1,17 @@
 package config;
 
 import org.assertj.core.api.Fail;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+import rewards.RewardNetwork;
+import rewards.internal.RewardNetworkImpl;
+import rewards.internal.account.AccountRepository;
+import rewards.internal.account.JdbcAccountRepository;
+import rewards.internal.restaurant.JdbcRestaurantRepository;
+import rewards.internal.restaurant.RestaurantRepository;
+import rewards.internal.reward.JdbcRewardRepository;
+import rewards.internal.reward.RewardRepository;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import javax.sql.DataSource;
 import java.lang.reflect.Field;
@@ -23,13 +33,12 @@ public class RewardsConfigTests {
 	// - Fix RewardsConfig if necessary.
 	// - Now run the test, it should pass.
 
-	/*
+
 	private RewardsConfig rewardsConfig = new RewardsConfig(dataSource);
 
 	@Test
 	public void getBeans() {
-		RewardNetwork rewardNetwork = rewardsConfig.rewardNetwork();
-		assertTrue(rewardNetwork instanceof RewardNetworkImpl);
+
 
 		AccountRepository accountRepository = rewardsConfig.accountRepository();
 		assertTrue(accountRepository instanceof JdbcAccountRepository);
@@ -42,8 +51,11 @@ public class RewardsConfigTests {
 		RewardRepository rewardsRepository = rewardsConfig.rewardRepository();
 		assertTrue(rewardsRepository instanceof JdbcRewardRepository);
 		checkDataSource(rewardsRepository);
+
+		RewardNetwork rewardNetwork = rewardsConfig.rewardNetwork(accountRepository, restaurantRepository, rewardsRepository);
+		assertTrue(rewardNetwork instanceof RewardNetworkImpl);
 	}
-	*/
+
 
 	/**
 	 * Ensure the data-source is set for the repository. Uses reflection as we do
