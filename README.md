@@ -711,6 +711,4 @@ public void testRewardAccountFor() {
 }
 }
 ```
-```java
 
-```
