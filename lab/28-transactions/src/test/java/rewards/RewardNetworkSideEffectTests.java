@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.sql.DataSource;
 
@@ -22,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * to run in method name order using @FixMethodOrder(MethodSorters.NAME_ASCENDING)
  * in this particular testing scenario. (In general, you should not do this.)
  *
- * TODO-08: MAKE SURE to revert the propagation attribute back to
+ * DONE: MAKE SURE to revert the propagation attribute back to
  * REQUIRED in RewardNetworkImpl.
  *
  * TODO-09: Examine the @Test logic below. Note that committed results from the
@@ -32,6 +33,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * TODO-10: Add @Transactional on the class and re-run the test. It should pass.
  * Do you know why?
  */
+@Transactional
 @ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = { SystemTestConfig.class })
 @TestMethodOrder(MethodOrderer.MethodName.class)

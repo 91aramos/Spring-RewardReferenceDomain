@@ -3,6 +3,7 @@ package config;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
 import rewards.RewardNetwork;
 import rewards.internal.RewardNetworkImpl;
 import rewards.internal.account.AccountRepository;
@@ -15,8 +16,8 @@ import rewards.internal.reward.RewardRepository;
 import javax.sql.DataSource;
 
 
-//	TODO-03: Add an annotation to enable Spring transaction
-
+//	DONE: Add an annotation to enable Spring transaction
+@EnableTransactionManagement
 @Configuration
 public class RewardsConfig {
 

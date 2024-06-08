@@ -5,11 +5,14 @@ import javax.sql.DataSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
 
 import config.RewardsConfig;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
 
-
+@EnableTransactionManagement
 @Configuration
 @Import(RewardsConfig.class)
 public class SystemTestConfig {
@@ -26,10 +29,14 @@ public class SystemTestConfig {
 			.addScript("classpath:rewards/testdb/schema.sql") //
 			.addScript("classpath:rewards/testdb/data.sql") //
 			.build();
-	}	
+	}
+
+	@Bean
+	public PlatformTransactionManager transactionManager() {
+		return new DataSourceTransactionManager(dataSource());
+	}
 	
-	
-	//	TODO-02: Define a bean named 'transactionManager' that configures a
+	//	DONE: Define a bean named 'transactionManager' that configures a
 	//           DataSourceTransactionManager.
 	//           How does it know which dataSource to manage?
 	

@@ -549,3 +549,168 @@ public void success(){ ... }
 public void transferError() { ... }
 }
 ```
+
+## Database Access Layer
+
+JDBC is a Java API that simplifies the way to interact with DBs. Spring simplifies the usage of that API by using JdbcTemplate.
+
+To create the JDBC Template we just need the datasource:
+
+```java
+JdbcTemplate template = new JdbcTemplate(dataSource); 
+```
+
+To implement JDBC-Based Repository:
+```java
+public class JabcCustomerRrepository implements CusiomerRepository {
+    private JdbcTemplate jdbcTemplate;
+
+    public JdbcCustomerRepository(JdbcTemplate jdbcTemplate) {
+        this.jdbcTemplate = jdbcTemplate;
+    }
+// For selects
+    public int getCustomerCount() {
+        String sql = "select count(*) from customer”;
+        return jdbcTemplate.queryForObject(sql, Integer.class);
+    }
+	public int getCountOfNationalsOver(Nationality nationality, int age) {
+        String sql = "select count(*) from PERSON " +
+                "where age > ? and nationality = ?";
+        return jdbcTemplate.queryForObject
+                (sql, Integer.class, age, nationality.toString());
+    }
+//For Updates, inserts or deletes. It will return the number of affected rows.
+	public int updateAge(Person person) {
+    	return jdbcTemplate.update(
+            "update PERSON set age = ? where id =?",
+    		person.getAge(),
+            person.getld());
+	}
+}
+```
+To retrive 1 row multiple columns queryForMap(..), queryForObject():
+```java
+//Returns Map { ID=1, FIRST_NAME="John", LAST_NAME="Doe" }
+public Map<String,Object> getPersoninfo(int id) {
+	String sql = "select * from PERSON where id=?";
+	return jdbcTemplate.queryForMap(sql, id);
+}
+public Person getFerson(int id) {
+    return jdbcTemplate.queryForObject(
+            "select first_name, last_name from PERSON where id=?",
+    (rs, rowNum) -> new Person(rs.getString("first_name"),
+            rs.getString("last_name"))
+            , id);
+}
+```
+
+To retrive multiple rows and columns queryForList(..), query():
+```java
+//Returns 0- Map { ID=1, FIRST_NAME="John", LAST_NAME="Doe" }
+// 0- Map { ID=2, FIRST_NAME="Alejandro", LAST_NAME="Ramos" }
+public List<Map<String,Object>> getAllPersoninfo() {
+	String sql = "select * from PERSON";
+	return jdbcTemplate.queryForList(sql);
+}
+
+public List<Person> getAllPersons() { 
+	return jdbcTemplate.query(
+			"select first_name, last_name from PERSON", 
+					(rs, rowNum) -> new Person(rs.getString("first_name"),
+			rs.getString("last_name"))
+);
+```
+
+Spring provides a ResultSetExtractor interface for processing an entire ResultSet at once
+
+This is usefull when you join more than one table.
+
+```java
+public class JdbcOrderRepository {
+	public Order findByConfirmationNumber(String number) {
+		// Execute an outer join between order and item tables
+		return jdbcTemplate.query(
+				"select...from order o, item i...confirmation_id = ?",
+				(ResultSetExtractor<Order>)(rs) -> {
+                    Order order = null;
+                    while (rs.next()) {
+                        if (order == null)
+                            g order = new Order(rs.getLong("ID"), rs.getString("NAME"), ...);
+                        order.addltem(mapltem(rs));
+                    }
+                    return order;
+                },
+				number);
+    }
+}
+```
+
+## Transactions
+
+### Management
+PlatformTransactionManager is de main component to manage transactions.
+First we need to define the PlatformTransactionManager in the configuration file:
+```java
+@Configuration
+@EnableTransactionManagement
+public class TxnConfig {
+	@Bean
+	public PlatformTransactionManager transactionManager(Datasource ds) {
+		return new DataSourceTransactionManager(ds);
+	}
+}
+```
+Add the @Transactional annotation in the classes or methods.
+```java
+//@Transactional
+public class RewardNetworklmpl implements RewardNetwork {
+// To change any parameter you can update the properties in parenthesis.   
+@Transactional (timeout=60)
+public RewardConfirmation rewardAccountFor(Dining d) {
+// atomic unit-of-work
+}
+}
+```
+
+### Propagation
+When a transactional method calls another transactional method they both will be consider as a single transaction. However there are ways to split them in to separate transactions.
+```java
+//If the transaction was not yet started it creates one. If it was created it is considered on the same.
+@Transactional(propagation=Propagation.REQUIRED)
+//It doesn't matter whether or not transaction was created it will generate a new one.
+@Transactional(propagation=Propagation.REQUIRES_NEW)
+```
+If two methods are on the same class they will be considered as same transaction independently of the propagation config.
+As they are not in different proxies they will not go through the proxy.
+
+### Rollbacks
+Rollback is only executed if there is a RuntimeException. There are some DB Libraries that doesn't throw Runtime exception. In order to rollback exceptions different than RuntimeException you can configure them in the annotation.
+
+```java
+public class RewardNetworklmpl implements RewardNetwork {
+@Transactional(rollbackFor=MyCheckedException.class,
+noRollbackFor={JmxException.class, MailException.class})
+public RewardConfirmation rewardAccountFor(Dining d) throws Exception {
+...
+}
+}
+```
+
+### Usage in test
+You can configure a test class or a method on a test class as transactional just by using: @Transactional.
+In that case all involved method will be executed as a transaction that will always by rollback at the end. 
+If you want to commit any of the operations you can put @Commit in the method that you want to commit.
+```java
+@SpringJUnitConfig(RewardsConfig.class)
+@Transactional
+public class RewardNetworkTest {
+@Test
+@Commit 
+public void testRewardAccountFor() {
+... // Whatever happens here will be committed
+}
+}
+```
+```java
+
+```
