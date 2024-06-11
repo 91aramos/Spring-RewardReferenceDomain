@@ -712,3 +712,321 @@ public void testRewardAccountFor() {
 }
 ```
 
+# SpringBoot
+
+Springboot will take care of all the dependencies of your project so you don't have to include them in your POM.xml file.
+For that you can use springboot parent or starter.
+
+This is the configuration springboot parent:
+```xml
+<parent>
+	<groupld>org.springframework.boot</groupId>
+	<artifactId>spring-boot-starter-parent</artifactId>
+	<version>2.7.5</version>
+</parent>
+```
+This would be the configuration for Springboot starter Dependencies.
+```xml
+<dependencies>
+	<dependency>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter</artifactId>
+	</dependency>
+</dependencies> 
+```
+
+You have different starters depending on the kind of things you need:
+- spring-boot-starter-jdbc(Database libraries)
+- spring-boot-starter-data-jpa (ORM API)
+- spring-boot-starter-web (web apps)
+- spring-boot-starter-batch
+
+Also Springboot will handle the Dependency injection by autoconfiguring the application.
+For that we use : @EnableAutoConfiguration.
+
+```java
+@SpringBootConfiguration
+@ComponentScan
+@EnableAutoConfiguration
+public class Application {
+	public static void main(String[] args) {
+		SpringApplication.run(Application.class, args);
+	}
+}
+```
+All those annotation can be conbined as:
+```java
+@SpringBootApplication
+(scanBasePackages="example.config")
+public class Application {
+}
+```
+
+SpringBoot allows you to package your application as Jar file or a container for Kubernetes. 
+
+For this you will need the plugin inside of your pom file as well:
+```xml
+<build>
+	<plugins>
+		<plugin>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-maven-plugin</artifactId>
+		</plugin>
+	</plugins>
+</build>
+```
+
+The command will be:gradle assemble Or mvn package
+
+## Integration Testing with SpringBoot.
+
+__@SpringBootTest__ alternative to @SpringJUnitConfig:
+
+```java
+//You define your application entry point. You can commit application entry point.
+// It uses the one you set as @SpringBootConfiguration / @SpringBootApplication
+@SpringBootTest(classes=Application.class)
+public class TransferServiceTests {
+    @Autowired
+    private TransferService transferService;
+
+    @Test
+    public void successfulTransfer() {
+        TransferConfirmation conf = transferService.trapsfer(...);
+		...
+    }
+}
+```
+## Hello World example
+
+Just three files to get a running Spring application:
+- pom.xml: Setup Spring Boot (and any other) dependencies
+```xml
+<parent>
+	<groupId>org.springframework.boot</groipId>
+	<artifactId>spring-boot-starter-parent</artifactId>
+	<version>2.7.5</version>
+</parent>
+<dependencies>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-jdbc</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.hsqldb</groupId>
+			<artifactId>hsqldb</artifactId>
+		</dependency>
+</dependencies>
+```
+
+- application.properties: General configuration
+
+```properties
+# Set the log level for all modules to ‘ERROR’
+logging. level. root=ERROR
+# Tell Spring JDBC Embedded DB Factory where
+# to obtain DDM and DML files
+spring.sql.init.schema-locations=classpath:rewards/schema.sql
+spring.sql.init.data-locations=classpath:rewards/data.sql
+```
+
+- Application class: Application launcher
+
+```java
+// Config class, doing component scanning and enabling auto configuration
+@SpringBootApplication
+public class Application {
+	public static final String QUERY = "SELECT count(*) FROM T_ACCOUNT
+	public static void main(String[] args) {
+		SpringApplication.run(Application.class, args);
+	}
+	@Bean
+	CommandLineRunner commandLineRunner(JdbcTemplate jdbcTemplate){
+		return args -> System.out.println("Hello, there are "
+				+ jdbcTemplate.queryForObject( SQL, Long.class)
+				+" accounts");
+	}
+}
+```
+
+## Properties
+
+### application.properties
+You can create one porperties file per profile (dev, uat, cloud)
+```properties
+db.driver=org.postgresql.Driver
+db.url=jdbc:postgresql://localhost/transfer
+db.user=transfer-app
+db.password=secret45
+```
+
+### application.yml
+
+Don't use tabs, not allowed. You can put more than one profile in the same file.
+
+```yaml
+spring.datasource:
+driver: org.postgresql.Driver
+username: transfer-app
+## Profile separator ---
+---
+spring: 
+  profiles: local
+  datasource:
+    url: jdbc:postgresql://localhost/xfer
+    password: secret45
+---
+spring:
+  profiles: cloud
+  datasource:
+   url: jdbc:postgresql://prod/xfer
+   password: secret45
+```
+
+## Mapping properties into classes
+
+First you can map the different properties into a class:
+Assuming this is you application.properties
+```properties
+rewards.client.host=192.168.1.42
+rewards.client.port=8080
+rewards.client.logdir=/logs
+rewards.client. timeout=2000
+```
+
+```java
+@ConfigurationProperties(prefix="rewards.client")
+public class ConnectionSettings {
+	private String host;
+	private int port;
+	private String logdir;
+	private int timeout;
+	... // getters/setters
+}
+```
+
+There are three options to ingest those properties:
+
+```java
+@SpringBootApplication
+@EnableConfigurationProperties(ConnectionSettings.class)
+public class RewardsApplication { .. }
+```
+```java
+@SpringBootApplication
+//This is like component scanning.
+@ConfigurationPropertiesScan
+public class RewardsApplication { .. }
+```
+```java
+@Component
+@ConfigurationProperties(prefix="rewards.client")
+public class ConnectionSettings { .. }
+```
+
+## Autoconfiguration
+
+It is enabled by using: @SpringBootApplication or @EnableAutoConfiguration.
+
+How it works is that Spring provides @Configuration classes with conditions.
+
+Conditions include
+- Do classpath contents include specific classes?
+- Are some properties set?
+- Are some beans already configured (or not configured)?
+
+AutoConfiguration classes are specified inside the external libraries:
+
+ - spring-boot-autoconfigure/META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports
+
+### Override Configuration
+
+There different ways to override the configuration:
+
+#### Set SpringBoot properties
+```properties
+## application.properties
+##This override the default properties of springboot for a datasource 
+spring.datasource.url=jdbc:mysql://localhost/test
+spring.datasource.username=dbuser
+spring.datasource.password=dbpass
+spring.datasource.driver-class-name=com.mysql. jdbc.Driver
+
+spring.sql.init.schema-locations=classpath:/testdb/schema.sql
+spring.sql.init.data-locations=classpath:/testdb/data.sql
+```
+
+```properties
+## application.properties
+##This override the default properties of springboot for log level
+logging.level.org.springframework=DEBUG
+logging.level.com.acme.your.code=INFO
+
+```
+
+#### Explicitly define beans yourself so Spring Boot won't
+
+```java
+@Bean
+public DataSource dataSource() {
+    return new EmbeddedDatabaseBuilder().
+            setName("RewardsDb").build();
+}
+```
+#### Explicitly disable some auto-configuration
+There are two ways:
+- In the @EnableAutoConfiguration annotation
+```java
+// The class can be found in the file mentiones in Autoconfiguraion section
+@EnableAutoConfiguration(exclude=DataSourceAutoConfiguration.class)
+```
+- In the application.properties
+```properties
+spring.autoconfigure.exclude=\ 
+org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
+```
+#### Change dependencies or their versions
+
+- Override dependency version in your pom.xml or build.gradle:
+```xml
+<properties>
+<spring-framework.version>5.3.22</spring-framework.version>
+</properties>
+```
+
+- Explicitly Substitute Dependencies:
+```xml
+<dependency>
+	<groupId>org.springframework.boot</groupId>
+	<artifactId>spring-boot-starter-web</artifactId>
+	// Exclude Tomcat
+	<exclusions>
+		<exclusion>
+			<groupIld>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-tomcat</artifactId>
+		</exclusion>
+	</exclusions>
+</dependency>
+// Use Jetty
+<dependency>
+<groupId>org.springframework.boot</groupId>
+<artifactId>spring-boot-starter-jetty</artifactId>
+</dependency>
+```
+
+## Running an Application
+These are commands that are run right after creating the application context.
+- CommandLineRunner: Offers run () method, handling arguments as an array
+- ApplicationRunner: Offers run () method, handling arguments as ApplicationArguments
+
+## Spring Data JPA
+
+
+
+  
+
+
+
+
+
+

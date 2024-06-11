@@ -1,8 +1,17 @@
 package rewards;
 
+import config.RewardsConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
+import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 // TODO-00 : In this lab, you are going to exercise the following:
 // - Understanding how auto-configuration is triggered in Spring Boot application
@@ -12,16 +21,16 @@ import org.springframework.boot.SpringApplication;
 // - Disabling a particular auto-configuration
 // - Exercising the usage of @ConfigurationProperties
 
-// TODO-01 : Open pom.xml or build.gradle, look for TO-DO-01
+// DONE : Open pom.xml or build.gradle, look for TO-DO-01
 
-// TODO-02 : In pom.xml or build.gradle, look for TO-DO-02
+// DONE : In pom.xml or build.gradle, look for TO-DO-02
 
-// TODO-03 : Turn this 'RewardsApplication' into a Spring Boot application
+// DONE : Turn this 'RewardsApplication' into a Spring Boot application
 // - Add an appropriate annotation to this class
 
 // --------------------------------------------
 
-// TODO-11 (Optional) : Disable 'DataSource' auto-configuration
+// DONE : Disable 'DataSource' auto-configuration
 // - Note that you are using your own 'DataSource' bean now
 //   instead of auto-configured one
 // - Use 'exclude' attribute of '@SpringBootApplication'
@@ -30,11 +39,13 @@ import org.springframework.boot.SpringApplication;
 // - Import 'RewardsConfig' class
 // - Run this application again and observe a successful execution
 
-// TODO-12 (Optional) : Look in application.properties for the next step.
+// DONE : Look in application.properties for the next step.
 
 // TODO-13 (Optional) : Follow the instruction in the lab document.
 //           The section titled "Build and Run using Command Line tools".
-
+@SpringBootApplication(exclude = DataSourceAutoConfiguration.class)
+@Import(RewardsConfig.class)
+@ConfigurationPropertiesScan
 public class RewardsApplication {
     static final String SQL = "SELECT count(*) FROM T_ACCOUNT";
 
@@ -45,19 +56,32 @@ public class RewardsApplication {
         SpringApplication.run(RewardsApplication.class, args);
     }
 
-    // TODO-04 : Let Spring Boot execute database scripts
+    // DONE : Let Spring Boot execute database scripts
     // - Move the SQL scripts (schema.sql and data.sql)
     //   from `src/test/resources/rewards/testdb` directory
     //   to `src/main/resources/` directory
 
-    // TODO-05 : Implement a command line runner that will query count from
+    // DONE : Implement a command line runner that will query count from
     //           T_ACCOUNT table and log the count to the console
     // - Use the SQL query and logger provided above.
     // - Use the JdbcTemplate bean that Spring Boot auto-configured for you
     // - Run this application and verify "Hello, there are 21 accounts" log message
     //   gets displayed in the console
+    @Bean
+    CommandLineRunner clr1(JdbcTemplate jdbc){
+        return args -> System.out.println("Hello, there are "
+                + jdbc.queryForObject(SQL, Long.class)
+                +" accounts");
+    }
 
-    // TODO-07 (Optional): Enable full debugging in order to observe how Spring Boot
+    @Bean
+    CommandLineRunner clr2(RewardsRecipientProperties properties){
+        return args -> System.out.println("Recipient Name:"
+                + properties.getName()
+                +" accounts");
+    }
+
+    // DONE (Optional): Enable full debugging in order to observe how Spring Boot
     //           performs its auto-configuration logic
     // - Follow TO-DO-07 in application.properties, then come back here.
     // - Run the application
