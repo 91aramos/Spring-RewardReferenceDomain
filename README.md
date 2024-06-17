@@ -1757,3 +1757,144 @@ public class AccountService {
 
 2. Configure security (authorization) rules
 3. Setup Web Authentication
+
+## SpringBoot Actuator
+Spring Boot Actuator is a tool provided by the Spring Boot framework that allows monitoring and managing applications in production. Actuator adds a series of HTTP endpoints to help developers gain insights into the application's health and performance in an easy and efficient manner.
+
+Key Features of Spring Boot Actuator:
+ Monitoring Endpoints: Provides ready-to-use endpoints for monitoring the application's health and status, such as 
+/health, /info, /metrics, /env, and more. These endpoints offer valuable information like the health status of the 
+application, configuration details, system metrics, Spring beans details, etc.
+  
+  | word        | Description                           |
+  |-------------|---------------------------------------|
+  | beans       | Spring Beans creados por la aplicación |
+  | conditions  | Condiciones utilizadas por la autoconfiguración |
+  | env         | Propiedades en el entorno Spring       |
+  | health      | Estado actual de la aplicación         |
+  | configprops | Lista consolidada de todas las @ConfigurationProperties |
+  | loggers     | Consulta y modifica los niveles de registro |
+  | mappings    | Mapeos de solicitudes de Spring MVC     |
+  | metrics    | List of available metrics                                      |
+  | sessions   | Fetch or delete user sessions (only if using Spring Session)   |
+  | shutdown   | Shutdown the application (gracefully), disabled by default    |
+  | threaddump | Performs a thread dump                                         |
+  | jolokia    | Exposes JMX beans over HTTP (not just actuators)              |
+
+
+  __/info Output Example__
+
+	```json
+	{
+		"build": {
+		"version": "5.3.23",
+		"artifact": "37-actuator",
+		"name": "37-actuator",
+		"group": "io.spring.training.core-spring",
+		"time": "2022-03-25T722:06:18.311Z"
+		}
+	}
+	```
+
+  __/health Output Example__
+
+	```json
+	{
+	"status": "UP"
+	}
+	```
+
+  __/metrics Output Example__
+
+	```json
+	{
+	"names": [
+		"jvm.memory.max",
+		"jvm.gc.memory.promoted",
+		"http.server.requests",
+		"system.cpu.usage",
+		"hikaricp.connections.active",
+		"process.start.time",
+		"reward.summary",
+		...
+		]
+	}
+	// actuator/metrics/http.server.requests
+	{
+	"name": "http.server.requests”,
+	"measurements": [
+	{ "statistic": "COUNT", "value™: 13},
+	{ "statistic": "MAX", "value": 0.003785154 },
+	..
+	],
+	"availableTags": [ {
+	"tag": "method",
+	"values": [ "POST", "GET" ],
+	...
+	}
+	```
+
+- Metrics and Statistics: Actuator collects and exposes detailed metrics about the application and the system it's running on, which helps in tracking performance and identifying potential issues.
+- Auditing and Traceability: Allows recording of audit events and tracing within the application, which is useful for tracking and troubleshooting issues.
+- Configuration Management: Facilitates viewing and managing the application's configuration properties and environment variables.
+- Integration with Monitoring Tools: Spring Boot Actuator can easily integrate with external monitoring and management tools like Prometheus, Grafana, ELK Stack (Elasticsearch, Logstash, and Kibana), among others.
+
+Example Usage of Spring Boot Actuator:
+To enable Actuator in a Spring Boot application, you only need to add the relevant dependency to your pom.xml (for Maven projects) or build.gradle (for Gradle projects).
+
+For Maven:
+
+```xml
+<dependency>
+<groupId>org.springframework.boot</groupId>
+<artifactId>spring-boot-starter-actuator</artifactId>
+</dependency>
+```
+For Gradle:
+
+```groovy
+implementation 'org.springframework.boot:spring-boot-starter-actuator'
+```
+
+Basic Configuration:
+Once the dependency is added, Actuator is automatically enabled. The endpoints can be configured and customized via the application.properties or application.yml file. For example, to enable all endpoints and expose them at /actuator, you can add:
+
+application.properties:
+
+```properties
+# Here you cdefine the endpoints you want to expose.
+management.endpoints.web.exposure.include=*
+management.endpoint.health.show-details=always
+```
+
+Security:
+Since Actuator endpoints can expose sensitive information about the application, it is crucial to configure them with appropriate security measures. Spring Boot provides built-in security mechanisms to protect these endpoints, such as authentication and authorization.
+
+Example Security Configuration in application.properties:
+
+```properties
+management.endpoint.health.sensitive=false
+management.endpoints.web.exposure.include=health,info
+```
+
+By using Springboot Security:
+
+```java
+// Base-path agnostic
+@Bean
+public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    http.authorizeHttpRequests((authz) -> authz
+            .requestMatchers(EndpointRequest.to(HealthEndpoint.class)).permitAll()
+            .requestMatchers(EndpointRequest.toAnyEndpoint()).hasRole("ACTUATOR")
+            .anyRequest().authenticated());
+    return http.build();
+}
+```
+
+In summary, Spring Boot Actuator is a powerful tool that facilitates monitoring, managing, and administering Spring Boot applications in production environments, offering a wide range of ready-to-use functionalities to help maintain the application's health and performance.
+
+
+
+
+
+
