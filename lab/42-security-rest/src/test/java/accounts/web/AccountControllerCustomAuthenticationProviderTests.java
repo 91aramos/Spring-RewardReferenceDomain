@@ -42,7 +42,7 @@ public class AccountControllerCustomAuthenticationProviderTests {
     private AccountService accountService;
 
     @Test
-    @Disabled
+
     public void accountDetails_with_spring_credentials_should_return_200() throws Exception {
 
         // arrange

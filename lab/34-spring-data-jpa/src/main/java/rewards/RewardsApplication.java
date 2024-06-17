@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component;
 // - Annotating a JPA Entity class
 // - Setting some JPA related properties
 
-// TODO-01: Review dependency as described in the TO-DO-01 
+// DONE: Review dependency as described in the TO-DO-01
 //          in the pom.xml or build.gradle 
 
 @SpringBootApplication

@@ -17,11 +17,11 @@ import config.AccountsConfig;
  * - Changing a port number of a Web application using server.port property
  * - Writing assertions in the test code
  *
- * TODO-01: Open pom.xml or build.gradle for this project and check the dependencies.
+ * DONE: Open pom.xml or build.gradle for this project and check the dependencies.
  * - Note that we are using Spring Boot starter for Web
  * - Note that we are also using devtools
  *
- * TODO-02: Run the application as a Spring Boot or Java application
+ * DONE: Run the application as a Spring Boot or Java application
  * - Access the home page: http://localhost:8080
  * - Click "List accounts as JSON" link in the homepage and note that it
  *   returns 404 - you will to implement it.

@@ -22,7 +22,7 @@ public class RestWsApplication {
     // - Creating URI for a newly created item in handling HTTP POST request
     // - Exercising RestTemplate for sending HTTP requests to the server application
 
-	// TODO-01: Run this Spring Boot application
+	// DONE: Run this Spring Boot application
 	// - IMPORTANT: Make sure that you are not still running an application
 	//   from a previous lab.
 	// - Verify you can reach http://localhost:8080 from a browser or curl.
